@@ -2,8 +2,6 @@
 
 This repository is our bash project
 
-Contributors
-*************
-
+Contributors :
 - Martin Sorel
 - Baptiste Waels
