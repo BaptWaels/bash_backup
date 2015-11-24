@@ -1,4 +1,6 @@
 #!/bin/bash
+program_name="backup.sh"
+
 
 # Global variables
 ignored_file=""
@@ -16,12 +18,13 @@ function error(){
   printf "\n"
 }
 
-# TODO Write HELP Method
-function usage(){
-  echo "HELP"
+function usage {
+    echo "usage: $program_name [-i ignored_patterns] [-d backup_dir]"
+    echo "	-h	                 display help"
+    echo "	-i ignored_patterns	 name of the file which contains patterns to ignore"
+    echo "	-d backup_dir            Path of the directory to backup"
+    exit 1
 }
-
-
 
 ###################
 #####  START  #####
@@ -55,9 +58,11 @@ if [ -z "$ignored_file" -a -z "$backup_dir" ]; then
    exit 0
 elif [ -z "$ignored_file" ]; then
       error "-i is mandatory"
+      usage
       exit 0
 elif [ -z "$backup_dir" ]; then
           error "-d is mandatory"
+          usage
           exit 0
 fi
 
