@@ -1,9 +1,12 @@
 #!/bin/bash
 
-program_name="backup.sh"
-ignored_file=""
-BACKUP_DIR=""
-CURRENT_DIR=$(pwd)"/"
+
+PROGRAM_NAME="backup.sh"
+IGNORED_FILE="" # will be defined by script args (-i)
+BACKUP_DIR="" # will be defined by script args (-d) which is the dir to backup
+CURRENT_DIR=$(pwd)"/" # Current path
+BACKUP_DIRNAME=".backup"  # name of the directory to store backups
+TAR_INIT_NAME="backup_init.tar.gz"
 
 #Check the shell
 if [ -z "$BASH_VERSION" ]; then
@@ -20,7 +23,7 @@ function error(){
 
 # Print usage of the script
 function usage() {
-    echo "usage: $program_name [-i ignored_patterns] [-d BACKUP_DIR]"
+    echo "usage: $PROGRAM_NAME [-i ignored_patterns] [-d BACKUP_DIR]"
     echo "	-h	                 display help"
     echo "	-i ignored_patterns	 name of the file which contains patterns to ignore"
     echo "	-d BACKUP_DIR            Path of the directory to backup"
@@ -30,10 +33,10 @@ function usage() {
 # Check if all args are set
 # Modify BACKUP_DIR variable to absolute path if needed
 function check_args(){
-  if [ -z "$ignored_file" -a -z "$BACKUP_DIR" ]; then
+  if [ -z "$IGNORED_FILE" -a -z "$BACKUP_DIR" ]; then
      usage
      exit 0
-  elif [ -z "$ignored_file" ]; then
+  elif [ -z "$IGNORED_FILE" ]; then
         error "-i is mandatory"
         usage
         exit 0
@@ -43,24 +46,42 @@ function check_args(){
             exit 0
   fi
 
-  ignored_file=$(echo $ignored_file | sed "s/^.\///g")   # to replace ./mypath by mypath
+  IGNORED_FILE=$(echo $IGNORED_FILE | sed "s/^.\///g")   # to replace ./mypath by mypath
   BACKUP_DIR=$(echo $BACKUP_DIR | sed "s/^.\///g")   # to replace ./mypath by mypath
 
   if [ ! "${BACKUP_DIR:0:1}" = "/" ]; then
     BACKUP_DIR=$CURRENT_DIR$BACKUP_DIR    # to obtain absolute path
   fi
 
-  if [ ! "${ignored_file:0:1}" = "/" ]; then
-    ignored_file=$CURRENT_DIR$ignored_file   # to obtain absolute path
+  if [ ! "${IGNORED_FILE:0:1}" = "/" ]; then
+    IGNORED_FILE=$CURRENT_DIR$IGNORED_FILE   # to obtain absolute path
   fi
 
   if [ ! -d "$BACKUP_DIR" ]; then
     error "The directory you would like to backup doesn't exist"
   fi
 
-  if [ ! -f "$ignored_file" ]; then
+  if [ ! -f "$IGNORED_FILE" ]; then
     error "The file which contains patterns to ignore doesn't exist"
   fi
+}
+
+function create_backup_dir(){
+
+  #$1=echo $1 | sed 's/[^\/]$/\//'  # add / at the end of param if absent
+  local path_to_backup_dir=$1$BACKUP_DIRNAME"/"
+  mkdir -p $path_to_backup_dir  # create backup dir if doesn't exist
+
+  # if TAR_INIT exists, do question2 else do question1 (if dir doesn't exist or symbolic link)
+  if [[ ! -d "$path_to_backup_dir$TAR_INIT_NAME"  || -L "$path_to_backup_dir"  ]] ; then
+    echo $path_to_backup_dir
+    add_files_to_tar $path_to_backup_dir
+  fi
+}
+
+function add_files_to_tar(){
+  myvar="*.pdf"
+  find "test_folder" -type f -maxdepth 1 | grep -Ev '.'$myvar'$'  #iterate threw all line of backignore file
 }
 
 #################
@@ -75,7 +96,7 @@ while getopts "hi:d:" opt; do
         usage
         exit 0
         ;;
-    i)  ignored_file=$OPTARG
+    i)  IGNORED_FILE=$OPTARG
         ;;
     d)  BACKUP_DIR=$OPTARG
         ;;
@@ -91,5 +112,13 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 check_args
 
-echo $BACKUP_DIR
-echo $ignored_file
+
+#find test_folder -type d #list all subfolder
+
+#test
+#create_backup_dir "/Users/baptou/Documents/dev/repository/own/bash_backup/"
+
+add_files_to_tar
+
+#echo $BACKUP_DIR
+#echo $IGNORED_FILE
