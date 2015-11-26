@@ -75,14 +75,15 @@ function create_backup_dir(){
   mkdir -p $path_to_backup_dir  # create backup dir if doesn't exist
 
   # if TAR_INIT exists, do question2 else do question1 (if dir doesn't exist or symbolic link)
-  if [[ ! -d "$path_to_backup_dir$TAR_INIT_NAME"  || -L "$path_to_backup_dir"  ]] ; then
-    add_files_to_tar $path_to_backup_dir
+  echo "$path_to_backup_dir$TAR_INIT_NAME"
+  if [[ ! -f "$path_to_backup_dir$TAR_INIT_NAME" ]] ; then
+    add_files_to_tar $path_to_backup_dir #question 1
   fi
 }
 
 function add_files_to_tar(){
-  local list_of_files=`find "test_folder" -type f -maxdepth 1 | sed 's!.*/!!'`
   local current_backup_path=`dirname "$1"`
+  local list_of_files=`find "$current_backup_path" -type f -maxdepth 1 | sed 's!.*/!!'`
 
   echo "$list_of_files"
 
@@ -124,12 +125,10 @@ shift $((OPTIND-1))
 check_args
 
 
-#find test_folder -type d #list all subfolder
+subdirs_to_backup=`find "$BACKUP_DIR" -type d -not -path '*'$BACKUP_DIRNAME` #list all subfolder but exclude the BACKUP_DIRNAME
 
-#test
-#create_backup_dir "/Users/baptou/Documents/dev/repository/own/bash_backup/"
+while read -r dir_to_backup; do
+  create_backup_dir $dir_to_backup"/"
+done <<< "$subdirs_to_backup"
 
-create_backup_dir "/Users/baptou/Documents/dev/repository/own/bash_backup/test_folder/"
-
-#echo $BACKUP_DIR
-#echo $IGNORED_FILE
+#create_backup_dir "/Users/baptou/Documents/dev/repository/own/bash_backup/test_folder/"
