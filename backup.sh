@@ -59,10 +59,12 @@ function check_args(){
 
   if [ ! -d "$BACKUP_DIR" ]; then
     error "The directory you would like to backup doesn't exist"
+    exit 0
   fi
 
   if [ ! -f "$IGNORED_FILE" ]; then
     error "The file which contains patterns to ignore doesn't exist"
+    exit 0
   fi
 }
 
@@ -74,23 +76,23 @@ function create_backup_dir(){
 
   # if TAR_INIT exists, do question2 else do question1 (if dir doesn't exist or symbolic link)
   if [[ ! -d "$path_to_backup_dir$TAR_INIT_NAME"  || -L "$path_to_backup_dir"  ]] ; then
-    echo $path_to_backup_dir
     add_files_to_tar $path_to_backup_dir
   fi
 }
 
 function add_files_to_tar(){
+  local list_of_files=`find "test_folder" -type f -maxdepth 1 | sed 's!.*/!!'`
+  local current_backup_path=`dirname "$1"`
 
-  local list_of_files=`find "test_folder" -type f -maxdepth 1`
+  echo "$list_of_files"
 
   while read pattern_to_exclude; do
     list_of_files=$(echo "$list_of_files" | grep -Ev '.'$pattern_to_exclude'$')
   done < $IGNORED_FILE
 
-  echo $list_of_files # contains list of files to KEEP
-
-  # myvar="*.pdf"
-  # find "test_folder" -type f -maxdepth 1 | grep -Ev '.'$myvar'$'  #iterate threw all line of backignore file
+  while read -r filename; do
+    tar --append -C $current_backup_path --file=$1$TAR_INIT_NAME $filename
+  done <<< "$list_of_files"
 }
 
 #################
@@ -127,7 +129,7 @@ check_args
 #test
 #create_backup_dir "/Users/baptou/Documents/dev/repository/own/bash_backup/"
 
-add_files_to_tar
+create_backup_dir "/Users/baptou/Documents/dev/repository/own/bash_backup/test_folder/"
 
 #echo $BACKUP_DIR
 #echo $IGNORED_FILE
