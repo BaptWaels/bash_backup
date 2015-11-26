@@ -20,6 +20,9 @@ ex:
 ./backup.sh -i backignore -d test_folder
 ```
 
+## EXO 2 - backup_improved.sh
+
+
 Contributors :
 - Martin Sorel
 - Baptiste Waels
