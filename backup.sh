@@ -80,8 +80,17 @@ function create_backup_dir(){
 }
 
 function add_files_to_tar(){
-  myvar="*.pdf"
-  find "test_folder" -type f -maxdepth 1 | grep -Ev '.'$myvar'$'  #iterate threw all line of backignore file
+
+  local list_of_files=`find "test_folder" -type f -maxdepth 1`
+
+  while read pattern_to_exclude; do
+    list_of_files=$(echo "$list_of_files" | grep -Ev '.'$pattern_to_exclude'$')
+  done < $IGNORED_FILE
+
+  echo $list_of_files # contains list of files to KEEP
+
+  # myvar="*.pdf"
+  # find "test_folder" -type f -maxdepth 1 | grep -Ev '.'$myvar'$'  #iterate threw all line of backignore file
 }
 
 #################
