@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROGRAM_NAME="backup.sh"
+PROGRAM_NAME="backup_improved.sh"
 IGNORED_FILE="" # will be defined by script args (-i)
 BACKUP_DIR="" # will be defined by script args (-d) which is the dir to backup
 CURRENT_DIR=$(pwd)"/" # Current path
