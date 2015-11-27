@@ -113,10 +113,14 @@ function add_diff_files_to_tar(){
 
       if ! tar -tf $1$TAR_INIT_NAME $filename >/dev/null 2>&1; then
         # $filename not inside INIT_TAR, so we add it inside INIT and we add an empty one to other tar
-        tar --append -C $current_backup_path --file=$1$TAR_INIT_NAME $filename > /dev/null 2>&1
+        tar --append -C $current_backup_path --file=$1$TAR_INIT_NAME $filename > /dev/null 2>&1 #add to the file init tar
+        #add an empty one
+        touch $1"/"$filename
+        tar --append -C $current_backup_path"/"$BACKUP_DIRNAME --file=$1$CURRENT_TAR_NAME $filename
+        rm $1"/"$filename
+      else
+        check_if_diff $filename $current_backup_path
       fi
-
-      check_if_diff $filename $current_backup_path
     else # binary file
       tar --append -C $current_backup_path --file=$1$CURRENT_TAR_NAME $filename # added directly to new backup tar
     fi
