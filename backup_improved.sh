@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 PROGRAM_NAME="backup.sh"
 IGNORED_FILE="" # will be defined by script args (-i)
 BACKUP_DIR="" # will be defined by script args (-d) which is the dir to backup
@@ -78,6 +77,7 @@ function check_args(){
   fi
 }
 
+#Create .backup dir if needed and add files to tar
 function create_backup_dir(){
   local path_to_backup_dir=$1$BACKUP_DIRNAME"/"
   mkdir -p $path_to_backup_dir  # create backup dir if doesn't exist
@@ -96,6 +96,8 @@ function create_backup_dir(){
   fi
 }
 
+# Called when an init backup was already done
+# Create the given tar
 function add_diff_files_to_tar(){
   local current_backup_path=`dirname "$1"`
   local list_of_files=`find "$current_backup_path" -type f -maxdepth 1 | sed 's!.*/!!'`
@@ -125,20 +127,19 @@ function add_diff_files_to_tar(){
       tar --append -C $current_backup_path --file=$1$CURRENT_TAR_NAME $filename # added directly to new backup tar
     fi
 
-
-    # if [[ -f "$current_backup_path"/"$filename" ]] ; then
-    #  tar --append -C $current_backup_path --file=$1$TAR_INIT_NAME $filename > /dev/null 2>&1
-    # fi
   done <<< "$list_of_files"
 }
 
+# Comparaison between two files to check if different or not
 function check_if_diff(){
   local init_tar_path=$2"/"$BACKUP_DIRNAME"/"$TAR_INIT_NAME
   local file_to_compare=$2"/"$1
 
-  #echo $file_to_compare
+  #TODO Check if diff
 }
 
+# Called to do an init backup
+# Create the given tar
 function add_files_to_tar(){
   local current_backup_path=`dirname "$1"`
   local list_of_files=`find "$current_backup_path" -type f -maxdepth 1 | sed 's!.*/!!'`
