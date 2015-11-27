@@ -7,6 +7,7 @@ BACKUP_DIR="" # will be defined by script args (-d) which is the dir to backup
 CURRENT_DIR=$(pwd)"/" # Current path
 BACKUP_DIRNAME=".backup"  # name of the directory to store backups
 TAR_INIT_NAME="backup_init.tar.gz"
+CURRENT_TAR_NAME=""
 
 #Check the shell
 if [ -z "$BASH_VERSION" ]; then
@@ -84,7 +85,54 @@ function create_backup_dir(){
   # if TAR_INIT exists, do question2 else do question1 (if dir doesn't exist or symbolic link)
   if [[ ! -f "$path_to_backup_dir$TAR_INIT_NAME" ]] ; then
     add_files_to_tar $path_to_backup_dir #question 1
+  else
+    if [[ $CURRENT_TAR_NAME = ""  ]] ; then #create name of tar if not set yet
+      epoch_second=`date +%s`
+      hostname=`uname -n`
+      CURRENT_TAR_NAME="backup_"$epoch_second"_"$hostname".tar.gz"
+    fi
+
+    add_diff_files_to_tar $path_to_backup_dir
   fi
+}
+
+function add_diff_files_to_tar(){
+  local current_backup_path=`dirname "$1"`
+  local list_of_files=`find "$current_backup_path" -type f -maxdepth 1 | sed 's!.*/!!'`
+
+  while read pattern_to_exclude; do
+    list_of_files=$(echo "$list_of_files" | grep -Ev '.'$pattern_to_exclude'$')
+  done < $IGNORED_FILE
+
+  while read -r filename; do
+    # check if filename binary, if yes, add to new tar
+    # if not, diff with first one, if same, do nothing
+    # if different add the diff to new archive
+    # if absent add to first tar and add an empty file to new oneb
+    if [[ $(file -0 $current_backup_path"/"$filename | grep 'empty\|text$') ]] ; then  # text file
+
+      if ! tar -tf $1$TAR_INIT_NAME $filename >/dev/null 2>&1; then
+        # $filename not inside INIT_TAR, so we add it inside INIT and we add an empty one to other tar
+        tar --append -C $current_backup_path --file=$1$TAR_INIT_NAME $filename > /dev/null 2>&1
+      fi
+
+      check_if_diff $filename $current_backup_path
+    else # binary file
+      tar --append -C $current_backup_path --file=$1$CURRENT_TAR_NAME $filename # added directly to new backup tar
+    fi
+
+
+    # if [[ -f "$current_backup_path"/"$filename" ]] ; then
+    #  tar --append -C $current_backup_path --file=$1$TAR_INIT_NAME $filename > /dev/null 2>&1
+    # fi
+  done <<< "$list_of_files"
+}
+
+function check_if_diff(){
+  local init_tar_path=$2"/"$BACKUP_DIRNAME"/"$TAR_INIT_NAME
+  local file_to_compare=$2"/"$1
+
+  #echo $file_to_compare
 }
 
 function add_files_to_tar(){
