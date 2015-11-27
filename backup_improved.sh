@@ -118,13 +118,13 @@ function add_diff_files_to_tar(){
         tar --append -C $current_backup_path --file=$1$TAR_INIT_NAME $filename > /dev/null 2>&1 #add to the file init tar
         #add an empty one
         touch $1"/"$filename
-        tar --append -C $current_backup_path"/"$BACKUP_DIRNAME --file=$1$CURRENT_TAR_NAME $filename
+        tar --append -C $current_backup_path"/"$BACKUP_DIRNAME --file=$1$CURRENT_TAR_NAME $filename > /dev/null 2>&1
         rm $1"/"$filename
       else
         check_if_diff $filename $current_backup_path
       fi
     else # binary file
-      tar --append -C $current_backup_path --file=$1$CURRENT_TAR_NAME $filename # added directly to new backup tar
+      tar --append -C $current_backup_path --file=$1$CURRENT_TAR_NAME $filename > /dev/null 2>&1  # added directly to new backup tar
     fi
 
   done <<< "$list_of_files"
@@ -133,9 +133,19 @@ function add_diff_files_to_tar(){
 # Comparaison between two files to check if different or not
 function check_if_diff(){
   local init_tar_path=$2"/"$BACKUP_DIRNAME"/"$TAR_INIT_NAME
-  local file_to_compare=$2"/"$1
+  local file_to_compare=<$2"/"$1
 
-  #TODO Check if diff
+  tar -C $2"/"$BACKUP_DIRNAME -zxvf $init_tar_path $1 > /dev/null 2>&1   # get file inside tar
+
+  local changes=`diff -u $2"/"$BACKUP_DIRNAME"/"$1 $2"/"$1`
+  #$2"/"$BACKUP_DIRNAME"/"$1 #remove file which was extract from tar
+
+  if [[ ! -z "$changes" ]] ; then # check if diff between both files, if yes, save it to tar
+    echo "$changes" > $2"/"$BACKUP_DIRNAME"/"$1
+    tar --append -C $2"/"$BACKUP_DIRNAME --file=$2"/"$BACKUP_DIRNAME"/"$CURRENT_TAR_NAME $1 > /dev/null 2>&1
+  fi
+
+  find $2"/"$BACKUP_DIRNAME -type f ! -name "*.tar.gz" -exec rm -rf {} \;
 }
 
 # Called to do an init backup
