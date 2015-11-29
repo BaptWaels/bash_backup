@@ -1,9 +1,11 @@
 #!/bin/bash
 
 #two args archive to restore and
+CURRENT_DIR=$(pwd)"/"
 ARCHIVE_TO_RESTORE=""
-OUTPUT_DIR=$(pwd)
+OUTPUT_DIR=$(pwd)"/"
 PROGRAM_NAME="restore_backup.sh"
+BACKUP_DIRNAME=".backup"
 TAR_INIT_NAME="backup_init.tar.gz"
 
 
@@ -45,8 +47,15 @@ function check_args(){
     exit 0
   fi
 
+  if [ ! "${ARCHIVE_TO_RESTORE:0:1}" = "/" ]; then
+    cd $ARCHIVE_TO_RESTORE > /dev/null 2>&1
+    ARCHIVE_TO_RESTORE=$(pwd)
+    cd - > /dev/null 2>&1
+  fi
+
   #check if ARCHIVE_TO_RESTORE contains backup_init
-  if [[ ! -f "$TAR_INIT_NAME" ]] ; then
+  if [[ ! -f $ARCHIVE_TO_RESTORE"/"$BACKUP_DIRNAME"/""$TAR_INIT_NAME" ]] ; then
+    #TODO check recursively in all subdirs if they all contains .backup DIR & an init tar
     error "You archive must contains at least one "$TAR_INIT_NAME
     usage
     exit 0
@@ -56,11 +65,16 @@ function check_args(){
     error $OUTPUT_DIR" must be a directory"
     usage
     exit 0
+  else
+    cd $OUTPUT_DIR > /dev/null 2>&1
+    OUTPUT_DIR=$(pwd)
+    cd - > /dev/null 2>&1
   fi
 
 }
 
 ARCHIVE_TO_RESTORE=$1
+
 if [ $2 ] ; then
   OUTPUT_DIR=$2
   ECHO $OUTPUT_DIR
