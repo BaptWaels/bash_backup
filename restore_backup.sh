@@ -73,11 +73,41 @@ function check_args(){
 
 }
 
+function restore_tar(){
+  if [ ! -f "$1" ]; then
+    error "You tried to restore an unknow .tar.gz : "$1
+    exit 0
+  fi
+
+
+  local backupdir_container=`dirname $1 | xargs dirname` # get dir containing .backup dir
+
+  local path_to_create=$OUTPUT_DIR"/""${backupdir_container#"$ARCHIVE_TO_RESTORE"/""}"
+  mkdir -p $path_to_create  # create missing dir into OUTPUT_DIR
+  tar -C $path_to_create -xvf $1
+}
+
+while getopts "h" opt; do
+    case "$opt" in
+    h)
+        usage
+        exit 0
+        ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+[ "$1" = "--" ] && shift
+
+
 ARCHIVE_TO_RESTORE=$1
 
 if [ $2 ] ; then
   OUTPUT_DIR=$2
-  ECHO $OUTPUT_DIR
 fi
 
 check_args
+
+
+restore_tar "/Users/baptou/Documents/dev/repository/own/bash_backup/test_folder/rep1/.backup/"$TAR_INIT_NAME
