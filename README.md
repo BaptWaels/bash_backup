@@ -22,6 +22,25 @@ ex:
 
 ## EXO 2 - backup_improved.sh
 
+Same usage as EXO 1
+
+## EXO 3 - restore_backup.sh
+
+Restore a given archive to the directory you specify. If none is specified, it will be restored inside your current directory.
+
+```
+usage: restore_backup.sh ARCHIVE_TO_RESTORE [[OUTPUT_DIR]]
+        -h                       display help
+        archive_to_restore       name of the archive you wish to restore
+        output_dir            (optional) path of the directory where to restore backup, default is the current directory
+```
+
+ex:
+```
+./restore_backup.sh test_folder second_test_folder
+```
+
+
 
 Contributors :
 - Martin Sorel
