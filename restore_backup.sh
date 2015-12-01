@@ -55,7 +55,6 @@ function check_args(){
 
   #check if ARCHIVE_TO_RESTORE contains backup_init
   if [[ ! -f $ARCHIVE_TO_RESTORE"/"$BACKUP_DIRNAME"/""$TAR_INIT_NAME" ]] ; then
-    #TODO check recursively in all subdirs if they all contains .backup DIR & an init tar
     error "You archive must contains at least one "$TAR_INIT_NAME
     usage
     exit 0
@@ -73,19 +72,13 @@ function check_args(){
 
 }
 
-function restore_tar(){
+function restore_given_tar(){
   if [ ! -f "$1" ]; then
-    error "You tried to restore an unknow .tar.gz : "$1
-    exit 0
+    #error "You tried to restore an unknow .tar.gz : "$1
+    return #no tar to restore in this archive
   fi
 
   local backupdir_container=`dirname $1 | xargs dirname` # get dir containing .backup dir
-
-  echo "out:"
-  echo $OUTPUT_DIR
-  echo $backupdir_container
-  echo $ARCHIVE_TO_RESTORE
-  echo "end"
 
   if [ ! "$backupdir_container" = "$ARCHIVE_TO_RESTORE" ] ; then
     # non root of restore folder
@@ -103,7 +96,19 @@ function restore_tar(){
   # comparison between restored files and current files
   compare_dir_and_restore $path_to_create $path_to_create"/.restore"
 
-  #TODO remove .restore dir
+  rm -rf $path_to_create"/.restore"
+}
+
+function restore_given_archive(){
+  local tar_location=$1
+
+  local list_of_files=`find "$tar_location" -type f -maxdepth 1 -name 'backup_*.tar.gz' | sed 's!.*/!!' | sort -n -t_ -k2` #list all files in .restore respecting *.tar.gz and sort it with given sort
+
+  while read -r filename; do
+    restore_given_tar $tar_location"/"$filename
+  done <<< "$list_of_files"
+
+  #restore_given_tar "/Users/baptou/Documents/dev/repository/own/bash_backup/test_folder/.backup/backup_1448799223_BaptWaels.tar.gz"
 }
 
 function compare_dir_and_restore(){
@@ -120,9 +125,9 @@ function compare_dir_and_restore(){
         # file already exist so we apply the patch
 
         mv $2"/"$filename $1"/"$filename".patch"
-        cd $1 > /dev/null 2>&1
-        patch < $1"/"$filename".patch"
-        cd - > /dev/null 2>&1
+        patch -d $1 -f < $1"/"$filename".patch" > /dev/null 2>&1
+
+        find $1 \( -name \*.orig -o -name \*.rej \) -delete #delete useless files from patch
 
         rm $1"/"$filename".patch"
       fi
@@ -156,6 +161,10 @@ fi
 
 check_args
 
+# list recursively all .backup dir inside archive to restore
+backup_to_restore_list=`find "$ARCHIVE_TO_RESTORE" -type d -path '*'$BACKUP_DIRNAME`
 
-#restore_tar "/Users/baptou/Documents/dev/repository/own/bash_backup/test_folder/rep1/.backup/backup_init.tar.gz"
-restore_tar "/Users/baptou/Documents/dev/repository/own/bash_backup/test_folder/.backup/backup_1448799223_BaptWaels.tar.gz"
+
+while read -r dir_to_restore; do
+  restore_given_archive $dir_to_restore
+done <<< "$backup_to_restore_list"
