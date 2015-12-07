@@ -57,7 +57,7 @@ function check_args(){
   BACKUP_DIR=$(echo $BACKUP_DIR | sed "s/^.\///g")   # to replace ./mypath by mypath
 
   if [ ! "${BACKUP_DIR:0:1}" = "/" ]; then
-    cd $BACKUP_DIR
+    cd $BACKUP_DIR > /dev/null 2>&1
     BACKUP_DIR=$(pwd)
     cd - > /dev/null 2>&1
   fi
