@@ -135,8 +135,7 @@ function check_if_diff(){
   local init_tar_path=$2"/"$BACKUP_DIRNAME"/"$TAR_INIT_NAME
   local file_to_compare=<$2"/"$1
 
-  tar -C $2"/"$BACKUP_DIRNAME -zxvf $init_tar_path $1 > /dev/null 2>&1   # get file inside tar
-
+  tar -C $2"/"$BACKUP_DIRNAME -xvf $init_tar_path $1 > /dev/null 2>&1   # get file inside tar
   local changes=`diff -u $2"/"$BACKUP_DIRNAME"/"$1 $2"/"$1`
   #$2"/"$BACKUP_DIRNAME"/"$1 #remove file which was extract from tar
 
