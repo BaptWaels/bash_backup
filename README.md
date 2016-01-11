@@ -39,9 +39,3 @@ ex:
 ```
 ./restore_backup.sh test_folder second_test_folder
 ```
-
-
-
-Contributors :
-- Martin Sorel
-- Baptiste Waels
